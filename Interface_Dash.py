@@ -31,9 +31,12 @@ Local = list(df['Type local'].unique()) +['ALL']
 
 annee = [2018, 2019, 2020, 2021] + ['ALL']
 
+#graph = pd.DataFrame(df.groupby('Mois')['Valeur fonciere'].mean())
+
 # Initialize the app
 app = Dash(__name__)
 
+###Layout STATS
 
 tab1_layout = html.Div([
     html.H1('Statistiques'),
@@ -56,15 +59,29 @@ tab1_layout = html.Div([
     dcc.Graph(id='histogram',style={'display': 'inline-block', 'width': '50%'}),
     dcc.Graph(id='graphique2', style={'display': 'inline-block', 'width': '50%'}),
     dcc.Graph(id='graphique3'),  
-    dcc.Graph(id='graphique4') ,
+    dcc.Graph(id='graphique4'),
+    dcc.Graph(id='graphique5'),
     dash_table.DataTable(data=df.to_dict('records'), page_size=30)
 ])
 
+###LAYOUT CARTO
+
 tab2_layout = html.Div([
     html.H1('Carto'),
+    #dcc.Graph(id='map'),
     dcc.Graph(id='graphique21'),
-    dcc.Graph(id='map')  
+    dcc.Graph(figure= px.choropleth_mapbox(data_frame=cartoM,
+        geojson='departements-version-simplifiee.geojson',
+        locations='code',  # Colonne contenant les codes des départements
+        featureidkey="properties.code",  # Clé pour faire correspondre les données avec le fichier GeoJSON
+        color='value',  # Colonne dont les valeurs seront utilisées pour la coloration
+        # Vous pouvez ajuster la portée (par exemple, 'france' pour la France)
+        center={"lat": 46.603354, "lon": 1.888334},  # Coordonnées géographiques du centre de la France
+        title='Carte prix du m2 par département')),
+    
 ])
+
+###LAYOUT PRED
 
 tab3_layout = html.Div([
     html.H1('Prédire votre bien :'),
@@ -72,12 +89,16 @@ tab3_layout = html.Div([
     dcc.Input(id='input-box-1', type='number', value=''),
     html.Label('Type local:'),
     dcc.Input(id='input-box-2', type='text', value=''),
-    html.Label('Surface en m2:'),
-    dcc.Input(id='input-box-3', type='number', value=0), 
+    html.Label('Surface reelle bati en m2:'),
+    dcc.Input(id='input-box-3', type='number', value=0),
+    html.Label('Surface terrain en m2:'),   
+    dcc.Input(id='input-box-4', type='number', value=''),
+    
     html.Button('OK', id='button'),
     html.Div(id='output')
 ])
 
+###LE MENU 
 
 # App layout
 app.layout = html.Div([
@@ -93,8 +114,9 @@ app.layout = html.Div([
      Output('graphique2', 'figure'),
      Output('graphique3', 'figure'),
      Output('graphique4', 'figure'),
+     Output('graphique5', 'figure'),
      Output('graphique21', 'figure'),
-     Output('map', 'figure'),
+     #Output('map', 'figure'),
      Output('output', 'children')
     ],
     [Input('annee-dropdown', 'value'),
@@ -102,11 +124,21 @@ app.layout = html.Div([
     Input('button', 'n_clicks'),],
     [State('input-box-1', 'value'),
     State('input-box-2', 'value'),
-    State('input-box-3', 'value')]
+    State('input-box-3', 'value'),
+    State('input-box-4', 'value')]
 )
 
+##
+##
+###UPDATE
+##
+##
 
-def update_output(selected_year, selected_local, n_clicks,  input1, input2, input3):
+def update_output(selected_year, selected_local, n_clicks,  input1, input2, input3, input4):
+    
+    ##
+    ### STATS 
+    ##
     
     if (selected_local == 'ALL' and selected_year == 'ALL'):
         filtered_data = df
@@ -121,49 +153,61 @@ def update_output(selected_year, selected_local, n_clicks,  input1, input2, inpu
     fig1 = px.histogram(filtered_data, x='Type local', y='Valeur fonciere', histfunc='avg', title=f'Histogram Moyenne des prix des biens par type de local en {selected_year} {selected_local}', color="Type local")
     fig2 = px.histogram(filtered_data, x='Type local', y='Surface terrain', histfunc='avg', title=f'Moyenne des surfaces des biens par type de local en {selected_year} {selected_local}', color="Type local")
     fig3 = px.scatter(filtered_data, x='Commune', y="Valeur fonciere", title=f'Prix des biens dans les communes en {selected_year} {selected_local}')
-    fig4 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Ventes par mois en {selected_year} {selected_local}', histfunc='count')
+    fig4 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Nombre de Ventes par mois en {selected_year} {selected_local}', histfunc='count')
+    fig5 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Moyennes des prix de ventes par mois en {selected_year} {selected_local}', histfunc='avg')
+    
+    
+    ##
+    ### CARTOGRAPHIE 
+    ##
     
     fig21 = px.histogram(cartoM, x="nom", y='value', title=f'Prix du m2 par departement').update_xaxes(categoryorder= "total descending")
     
-    carte = px.choropleth_mapbox(data_frame=cartoM,
-        geojson='departements-version-simplifiee.geojson',
-        locations='nom',  # Colonne contenant les codes des départements
-        featureidkey="properties.nom",  # Clé pour faire correspondre les données avec le fichier GeoJSON
-        color='value',  # Colonne dont les valeurs seront utilisées pour la coloration
-        # Vous pouvez ajuster la portée (par exemple, 'france' pour la France)
-        center={"lat": 46.603354, "lon": 1.888334},  # Coordonnées géographiques du centre de la France
-        title='Carte prix du m2 par département',
-    ) 
+    # carte = px.choropleth(data_frame=cartoM,
+    #     geojson='departements-version-simplifiee.geojson',
+    #     locations='nom',  # Colonne contenant les codes des départements
+    #     featureidkey="properties.nom",  # Clé pour faire correspondre les données avec le fichier GeoJSON
+    #     color='value',  # Colonne dont les valeurs seront utilisées pour la coloration
+    #     # Vous pouvez ajuster la portée (par exemple, 'france' pour la France)
+    #     center={"lat": 46.603354, "lon": 1.888334},  # Coordonnées géographiques du centre de la France
+    #     title='Carte prix du m2 par département',
+    # ) 
 
-    carte.update_geos(
-        visible=False,  # Masquer les frontières des pays ou des états, car vous affichez déjà les frontières des départements
-        showland=True,  # Afficher les terres
-        landcolor='rgb(217, 217, 217)',  # Couleur des terres
-        showcoastlines=True,  # Afficher les lignes de côte
-        coastlinecolor="RebeccaPurple",  # Couleur des lignes de côte
-        showframe=False,  # Masquer le cadre
-        projection_scale=3,  # Ajuster l'échelle de la projection pour agrandir ou réduire la carte
-        lonaxis_range=[-20, 20],  # Plage de longitudes (ajuster selon vos besoins)
-        lataxis_range=[30, 52]   # Plage de latitudes (ajuster selon vos besoins)
-    )
-
-   
+    # carte.update_geos(
+    #     fitbounds="locations",
+    #     visible=False,  # Masquer les frontières des pays ou des états, car vous affichez déjà les frontières des départements
+    #     showland=True,  # Afficher les terres
+    #     landcolor='rgb(217, 217, 217)',  # Couleur des terres
+    #     showcoastlines=True,  # Afficher les lignes de côte
+    #     coastlinecolor="RebeccaPurple",  # Couleur des lignes de côte
+    #     showframe=False,  # Masquer le cadre
+    #     projection_scale=3,  # Ajuster l'échelle de la projection pour agrandir ou réduire la carte
+    #     lonaxis_range=[-20, 20],  # Plage de longitudes (ajuster selon vos besoins)
+    #     lataxis_range=[30, 52]   # Plage de latitudes (ajuster selon vos besoins)
+    # )
     
+    ##
+    ### PREDICTIONS
+    ##
+    texte = f''
     if n_clicks is None:
-        texte = 'Cliquez sur le bouton pour prédire votre bien.'
+        texte = f'Cliquez sur le bouton pour prédire votre bien.'
     else:
         if input3 is None or input3 == 0:
-            texte = 'Veuillez remplir les chmaps manquant'
+            texte = f'Veuillez remplir les chmaps manquant ou erreur d orthographe vérifier'
+        if input2 not in {'Maison', 'Appartement', 'Dépendance', 'Local industriel. commercial ou assimilé'}:
+            input2 = f'faire une classif'
         else:
         # Vous pouvez réutiliser les valeurs récupérées dans ces variables
         # Faites quelque chose avec ces variables ici, par exemple, imprimez-les
             print("Valeur du premier champ :", input1)
             print("Valeur du deuxième champ :", input2)
             print("Valeur du deuxième champ :", input3)
+            print("Valeur du deuxième champ :", input4)
             # Retournez les valeurs pour les afficher dans l'interface utilisateur
             texte = f'Vous avez entré : "{input1}" dans le premier champ et "{input2}" dans le deuxième champ.'
     
-    return fig1, fig2, fig3, fig4, carte, fig21, texte
+    return fig1, fig2, fig3, fig4, fig5, fig21, texte
 
 
 
