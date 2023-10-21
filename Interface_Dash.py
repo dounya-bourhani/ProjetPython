@@ -55,6 +55,10 @@ with open("/Users/celia/Documents/GitHub/ProjetPython/departements-version-simpl
 # Initialize the app
 app = Dash(__name__)
 
+# Pour le déploiement de l'app
+server = app.server
+
+
 ###Layout STATS
 
 tab1_layout = html.Div([
