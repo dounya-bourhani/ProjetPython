@@ -1,25 +1,42 @@
 from dash import Dash, html, dash_table, dcc
 from dash.dependencies import Input, Output, State
-import folium 
+import requests
 import pandas as pd
 import plotly.express as px
-import dash_leaflet as dl
-import plotly.io as pio
+
 
 
 # Incorporate data
+
+#importer des dataframe
 import pickle
+
 
 with open('dataframe.pkl', 'rb') as file:
     df = pickle.load(file)
     
+with open('dataframe2.pkl', 'rb') as file:
+    df2 = pickle.load(file)
+    
 with open('cartoM.pkl', 'rb') as file:
     cartoM = pickle.load(file)
+    
+#importer les modeles de classif et regerssion
+
+with open('modele_classif.pkl', 'rb') as file:
+    model_class = pickle.load(file)
+    
+with open('decision_tree_model.pkl', 'rb') as file:
+    model_reg = pickle.load(file)
+    
+    
+
+cartoM.drop(columns={'geometry'})
 
 
 df = df.sample(frac=1, random_state=1).reset_index(drop=True)
 
-df = df.head(5000)
+df = df.head(2000)
 
 df['Date mutation'] = pd.to_datetime(df['Date mutation'], dayfirst=True)
 
@@ -31,6 +48,10 @@ Local = list(df['Type local'].unique()) +['ALL']
 
 annee = [2018, 2019, 2020, 2021] + ['ALL']
 
+
+import geojson
+with open("/Users/celia/Documents/GitHub/ProjetPython/departements-version-simplifiee.geojson") as f:
+    carte_dep = geojson.load(f)
 #graph = pd.DataFrame(df.groupby('Mois')['Valeur fonciere'].mean())
 
 # Initialize the app
@@ -39,7 +60,7 @@ app = Dash(__name__)
 ###Layout STATS
 
 tab1_layout = html.Div([
-    html.H1('Statistiques'),
+    html.H1('Statistiques', style={'textAlign': 'center'}),
     html.Div(children='Petit tour sur nos données'),
     html.Label('Sélectionnez une année :', style= {'display': 'inline-block', 'marginRight': '20px'}),
     dcc.Dropdown(
@@ -56,22 +77,23 @@ tab1_layout = html.Div([
         style= {'display': 'inline-block', 'width': '35%'}
     ),
     html.Div(id='output-container'),
-    dcc.Graph(id='histogram',style={'display': 'inline-block', 'width': '50%'}),
-    dcc.Graph(id='graphique2', style={'display': 'inline-block', 'width': '50%'}),
+    dcc.Graph(id='histogram',style={'display': 'inline-block'}),
+    dcc.Graph(id='graphique2', style={'display': 'inline-block'}),
     dcc.Graph(id='graphique3'),  
     dcc.Graph(id='graphique4'),
     dcc.Graph(id='graphique5'),
     dash_table.DataTable(data=df.to_dict('records'), page_size=30)
+    
 ])
 
 ###LAYOUT CARTO
 
 tab2_layout = html.Div([
-    html.H1('Carto'),
+    html.H1('Carto',  style={'textAlign': 'center'}),
     #dcc.Graph(id='map'),
     dcc.Graph(id='graphique21'),
     dcc.Graph(figure= px.choropleth_mapbox(data_frame=cartoM,
-        geojson='departements-version-simplifiee.geojson',
+        geojson= carte_dep,
         locations='code',  # Colonne contenant les codes des départements
         featureidkey="properties.code",  # Clé pour faire correspondre les données avec le fichier GeoJSON
         color='value',  # Colonne dont les valeurs seront utilisées pour la coloration
@@ -84,17 +106,24 @@ tab2_layout = html.Div([
 ###LAYOUT PRED
 
 tab3_layout = html.Div([
-    html.H1('Prédire votre bien :'),
-    html.Label('Nombre de pièces principales:'),
-    dcc.Input(id='input-box-1', type='number', value=''),
+    html.H1('Estimez votre bien :',  style={'textAlign': 'center'}),
+    html.Br(),
+    html.Br(),
     html.Label('Type local:'),
-    dcc.Input(id='input-box-2', type='text', value=''),
+    dcc.Input(id='input-box-1', type='text', value=''),
     html.Label('Surface reelle bati en m2:'),
+    dcc.Input(id='input-box-2', type='text', value=''),
+    html.Label('Surface terrain en m2:'),
     dcc.Input(id='input-box-3', type='number', value=0),
-    html.Label('Surface terrain en m2:'),   
+    html.Label('Nombre de pièces :'),   
     dcc.Input(id='input-box-4', type='number', value=''),
-    
-    html.Button('OK', id='button'),
+    html.Label('Nombre de lots:'),   
+    dcc.Input(id='input-box-5', type='number', value='1'),
+    html.Br(),
+    html.Br(),
+    html.Button('Estimer', id='button', style= {'display': 'inline-block', 'width': '10%', 'borderWidth': '2px 2px 6px 2px'}),
+    html.Br(),
+    html.Br(),
     html.Div(id='output')
 ])
 
@@ -125,7 +154,8 @@ app.layout = html.Div([
     [State('input-box-1', 'value'),
     State('input-box-2', 'value'),
     State('input-box-3', 'value'),
-    State('input-box-4', 'value')]
+    State('input-box-4', 'value'),
+    State('input-box-5', 'value')]
 )
 
 ##
@@ -134,7 +164,7 @@ app.layout = html.Div([
 ##
 ##
 
-def update_output(selected_year, selected_local, n_clicks,  input1, input2, input3, input4):
+def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL):
     
     ##
     ### STATS 
@@ -189,24 +219,54 @@ def update_output(selected_year, selected_local, n_clicks,  input1, input2, inpu
     ##
     ### PREDICTIONS
     ##
+    
     texte = f''
     if n_clicks is None:
         texte = f'Cliquez sur le bouton pour prédire votre bien.'
     else:
-        if input3 is None or input3 == 0:
+        while SRB is None or SRB == 0 or NbP == 0 or NbP is None:
             texte = f'Veuillez remplir les chmaps manquant ou erreur d orthographe vérifier'
-        if input2 not in {'Maison', 'Appartement', 'Dépendance', 'Local industriel. commercial ou assimilé'}:
-            input2 = f'faire une classif'
-        else:
+        if L not in {'Maison', 'Appartement', 'Dépendance', 'Local industriel. commercial ou assimilé'}:
+            code_com = df["Code commune"].mean()
+            classif = pd.DataFrame([[SRB, ST, NbP, NbL,  code_com]], columns=["Surface reelle bati", "Surface terrain", "Nombre pieces principales", "Nombre de lots","Code commune"])
+            L = model_class.predict(classif)
+            print(L)
+            texte = f'Nous avons supposé que avez un(e) {L}'
         # Vous pouvez réutiliser les valeurs récupérées dans ces variables
         # Faites quelque chose avec ces variables ici, par exemple, imprimez-les
-            print("Valeur du premier champ :", input1)
-            print("Valeur du deuxième champ :", input2)
-            print("Valeur du deuxième champ :", input3)
-            print("Valeur du deuxième champ :", input4)
-            # Retournez les valeurs pour les afficher dans l'interface utilisateur
-            texte = f'Vous avez entré : "{input1}" dans le premier champ et "{input2}" dans le deuxième champ.'
-    
+        moy_tc = df2["Moyenne Taux Chomage"].mean()
+        m2 = df2["prix_par_m2"].mean()
+        m2R = df2["moyenne_prix_par_m2_par_code_postal"].mean()
+        if(L =='Maison'):
+            TM = 1
+            TA = 0
+            TD = 0
+            TZ = 0
+        elif(L == 'Appartement'):
+            TA = 1 
+            TM = 0
+            TD = 0
+            TZ = 0
+        elif(L == 'Dépendance'):
+            TD = 1
+            TA = 0
+            TM = 0
+            TZ = 0
+        else :
+            TZ = 1
+            TA = 0
+            TD = 0
+            TM = 0  
+        reg = pd.DataFrame([[NbP, SRB, ST, NbL, moy_tc,  m2, m2R, TA, TD, TZ, TM]], columns= ['Nombre pieces principales', 'Surface reelle bati', 'Surface terrain', 'Nombre de lots', 'Moyenne Taux Chomage',
+                                                                                              'prix_par_m2', 'moyenne_prix_par_m2_par_code_postal','Type local_Appartement', 'Type local_Dépendance', 'Type local_Local industriel. commercial ou assimilé', 'Type local_Maison'])
+                
+        print("Valeur du premier champ :", L)
+        print("ça marche ? ", TM)
+        print("test ? ", TA)
+        valeur = model_reg.predict(reg)
+        # Retournez les valeurs pour les afficher dans l'interface utilisateur
+        texte = texte + f'Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
+
     return fig1, fig2, fig3, fig4, fig5, fig21, texte
 
 
