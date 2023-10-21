@@ -11,7 +11,6 @@ import plotly.express as px
 #importer des dataframe
 import pickle
 
-
 with open('dataframe.pkl', 'rb') as file:
     df = pickle.load(file)
     
@@ -26,8 +25,7 @@ with open('cartoM.pkl', 'rb') as file:
 with open('modele_classif.pkl', 'rb') as file:
     model_class = pickle.load(file)
     
-with open('decision_tree_model.pkl', 'rb') as file:
-    model_reg = pickle.load(file)
+
     
     
 
@@ -112,13 +110,15 @@ tab3_layout = html.Div([
     html.Label('Type local:'),
     dcc.Input(id='input-box-1', type='text', value=''),
     html.Label('Surface reelle bati en m2:'),
-    dcc.Input(id='input-box-2', type='text', value=''),
+    dcc.Input(id='input-box-2', type='number', value=''),
     html.Label('Surface terrain en m2:'),
     dcc.Input(id='input-box-3', type='number', value=0),
     html.Label('Nombre de pièces :'),   
     dcc.Input(id='input-box-4', type='number', value=''),
     html.Label('Nombre de lots:'),   
     dcc.Input(id='input-box-5', type='number', value='1'),
+    html.Label('Code Departement:'),   
+    dcc.Input(id='input-box-6', type='text', value='01' ,maxLength=2, minLength=2),
     html.Br(),
     html.Br(),
     html.Button('Estimer', id='button', style= {'display': 'inline-block', 'width': '10%', 'borderWidth': '2px 2px 6px 2px'}),
@@ -155,7 +155,8 @@ app.layout = html.Div([
     State('input-box-2', 'value'),
     State('input-box-3', 'value'),
     State('input-box-4', 'value'),
-    State('input-box-5', 'value')]
+    State('input-box-5', 'value'),
+    State('input-box-6', 'value')]
 )
 
 ##
@@ -164,7 +165,7 @@ app.layout = html.Div([
 ##
 ##
 
-def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL):
+def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL, codeP):
     
     ##
     ### STATS 
@@ -231,12 +232,21 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
             classif = pd.DataFrame([[SRB, ST, NbP, NbL,  code_com]], columns=["Surface reelle bati", "Surface terrain", "Nombre pieces principales", "Nombre de lots","Code commune"])
             L = model_class.predict(classif)
             print(L)
-            texte = f'Nous avons supposé que avez un(e) {L}'
+            texte = f'Nous avons supposé que avez un(e) {L}, '
         # Vous pouvez réutiliser les valeurs récupérées dans ces variables
         # Faites quelque chose avec ces variables ici, par exemple, imprimez-les
         moy_tc = df2["Moyenne Taux Chomage"].mean()
-        m2 = df2["prix_par_m2"].mean()
-        m2R = df2["moyenne_prix_par_m2_par_code_postal"].mean()
+        
+        ### m2 Code dep
+        
+        filtre = df2['Code postal'] == codeP
+        
+        filtre = df2[filtre]
+        
+        m2R = filtre["moyenne_prix_par_m2_par_code_postal"].mean()
+    
+        m2 = df2["prix_par_m2"][0]
+        
         if(L =='Maison'):
             TM = 1
             TA = 0
@@ -257,15 +267,31 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
             TA = 0
             TD = 0
             TM = 0  
+            
+        with open('decision_tree_model.pkl', 'rb') as file:
+            model_reg = pickle.load(file)   
+            
+                   
         reg = pd.DataFrame([[NbP, SRB, ST, NbL, moy_tc,  m2, m2R, TA, TD, TZ, TM]], columns= ['Nombre pieces principales', 'Surface reelle bati', 'Surface terrain', 'Nombre de lots', 'Moyenne Taux Chomage',
                                                                                               'prix_par_m2', 'moyenne_prix_par_m2_par_code_postal','Type local_Appartement', 'Type local_Dépendance', 'Type local_Local industriel. commercial ou assimilé', 'Type local_Maison'])
+         
+         ##on rappelle le pkl à chaque fois 
+         
+        
+            
                 
         print("Valeur du premier champ :", L)
         print("ça marche ? ", TM)
         print("test ? ", TA)
+        print("m2:", m2)
+        print('m2dep:', m2R)
+        
         valeur = model_reg.predict(reg)
+        print(valeur)
+        
         # Retournez les valeurs pour les afficher dans l'interface utilisateur
-        texte = texte + f'Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
+        texte = texte + f' Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
+        file.close()
 
     return fig1, fig2, fig3, fig4, fig5, fig21, texte
 
