@@ -12,18 +12,18 @@ import json
 #importer des dataframe
 import pickle
 
-with open('dataframe.pkl', 'rb') as file:
+with open('./dataframe.pkl', 'rb') as file:
     df = pickle.load(file)
     
-with open('dataframe2.pkl', 'rb') as file:
+with open('./dataframe2.pkl', 'rb') as file:
     df2 = pickle.load(file)
     
-with open('cartoM.pkl', 'rb') as file:
+with open('./cartoM.pkl', 'rb') as file:
     cartoM = pickle.load(file)
     
 #importer les modeles de classif et regerssion
 
-with open('modele_classif.pkl', 'rb') as file:
+with open('./modele_classif.pkl', 'rb') as file:
     model_class = pickle.load(file)
     
 
@@ -285,7 +285,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
             TD = 0
             TM = 0  
             
-        with open('decision_tree_model.pkl', 'rb') as file:
+        with open('./decision_tree_model.pkl', 'rb') as file:
             model_reg = pickle.load(file)   
             
                    
