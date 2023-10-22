@@ -12,7 +12,7 @@ import json
 #importer des dataframe
 import pickle
 
-with open('./dataframe.pkl', 'rb') as file:
+with open('C:/Users/bourh/Cours/CoursM2SISE/Machine_Learning_Python/ProjetPython/dataframe.pkl', 'rb') as file:
     df = pickle.load(file)
     
 with open('./dataframe2.pkl', 'rb') as file:
