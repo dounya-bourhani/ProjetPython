@@ -13,15 +13,6 @@ import json
 #importer des dataframe
 import pickle
 
-# with open('dataframe.pkl', 'rb') as file:
-#     df = pickle.load(file)
-    
-# with open('dataframe2.pkl', 'rb') as file:
-#     df2 = pickle.load(file)
-    
-# with open('cartoM.pkl', 'rb') as file:
-#     cartoM = pickle.load(file)
-
 import requests
 import joblib
     
@@ -55,11 +46,6 @@ with open('modele_classif.pkl', 'wb') as f:
 
 model_class = joblib.load('modele_classif.pkl')
 
-# with open('modele_classif.pkl', 'rb') as file:
-#     model_class = pickle.load(file)
-            
-    
-
 
 cartoM.drop(columns={'geometry'})
 
@@ -83,17 +69,11 @@ annee = [2018, 2019, 2020, 2021] + ['ALL']
 
 import geojson
 import json
+
+# importation du geojson
 url_geojson_data = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/departements-version-simplifiee.geojson?raw=true'
 response_geojson_data = requests.get(url_geojson_data,verify=False)
-
-# with open('departements-version-simplifiee.geojson', 'wb') as f:
-#     f.write(response_geojson_data.content)
-
 geojson_data = json.loads(response_geojson_data.text)
-# geojson_data = joblib.load('departements-version-simplifiee.geojson')
-
-# with open('/Users/celia/Documents/GitHub/ProjetPython/departements-version-simplifiee.geojson', 'r') as geojson_file:
-#     geojson_data = json.load(geojson_file)
     
 #graph = pd.DataFrame(df.groupby('Mois')['Valeur fonciere'].mean())
 
