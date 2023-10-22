@@ -317,7 +317,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
         print(valeur)
         
         # Retournez les valeurs pour les afficher dans l'interface utilisateur
-        texte = texte + f' Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
+        texte = texte + f' Votre bien est estimé à : "{valeur}"'
         file.close()
 
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig21, carte, carte2, texte

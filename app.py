@@ -35,6 +35,14 @@ df = joblib.load('dataframe_sample.pkl')
 df2 = joblib.load('dataframe2_sample.pkl')
 cartoM = joblib.load('cartoM.pkl')
 
+
+url_model_reg = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/decision_tree_model.pkl?raw=true'
+response_model_reg = requests.get(url_model_reg,verify=False)
+with open('decision_tree_model.pkl', 'wb') as f:
+    f.write(response_model_reg.content)
+model_reg = joblib.load('decision_tree_model.pkl')
+
+
 #importer les modeles de classif et regerssion
 
 url_model_class = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/modele_classif.pkl?raw=true'
@@ -319,13 +327,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
         reg = pd.DataFrame([[NbP, SRB, ST, NbL, moy_tc,  m2, m2R, TA, TD, TZ, TM]], columns= ['Nombre pieces principales', 'Surface reelle bati', 'Surface terrain', 'Nombre de lots', 'Moyenne Taux Chomage',
                                                                                               'prix_par_m2', 'moyenne_prix_par_m2_par_code_postal','Type local_Appartement', 'Type local_Dépendance', 'Type local_Local industriel. commercial ou assimilé', 'Type local_Maison'])
          
-         ##on rappelle le pkl à chaque fois 
-         
-        url_model_reg = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/decision_tree_model.pkl?raw=true'
-        response_model_reg = requests.get(url_model_reg,verify=False)
-        with open('decision_tree_model.pkl', 'wb') as f:
-            f.write(response_model_reg.content)
-        model_reg = joblib.load('decision_tree_model.pkl')
+    
 
         # with open('decision_tree_model.pkl', 'rb') as file:
         #     model_reg = pickle.load(file)   
@@ -342,7 +344,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
         print(valeur)
         
         # Retournez les valeurs pour les afficher dans l'interface utilisateur
-        texte = texte + f' Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
+        texte = texte + f' Votre bien est estimé à : "{valeur}"'
         # file.close()
 
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig21, carte, carte2, texte
