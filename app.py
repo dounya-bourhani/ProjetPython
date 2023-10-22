@@ -45,10 +45,13 @@ cartoM = joblib.load('cartoM.pkl')
 
 #importer les modeles de classif et regerssion
 
-url_model_class = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/modele_classif.pkl'
+url_model_class = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/modele_classif.pkl?raw=true'
+
 response_model_clas = requests.get(url_model_class,verify=False)
+
 with open('modele_classif.pkl', 'wb') as f:
     f.write(response_model_clas.content)
+
 model_class = joblib.load('modele_classif.pkl')
 
 # with open('modele_classif.pkl', 'rb') as file:
