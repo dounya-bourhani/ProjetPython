@@ -317,4 +317,5 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
 
 # Run the app
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=False)
+    app.run_server(debug=True)
