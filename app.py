@@ -82,7 +82,7 @@ annee = [2018, 2019, 2020, 2021] + ['ALL']
 
 
 import geojson
-url_geojson_data = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/departements-version-simplifiee.geojson'
+url_geojson_data = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/departements-version-simplifiee.geojson?raw=true'
 response_geojson_data = requests.get(url_geojson_data,verify=False)
 
 with open('departements-version-simplifiee.geojson', 'wb') as f:
