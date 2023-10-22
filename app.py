@@ -6,7 +6,7 @@ import plotly.express as px
 import json
 
 import os
-print(os.getcwd())
+os.chdir('C:/Users/bourh/Cours/CoursM2SISE/Machine_Learning_Python/ProjetPython')
 
 
 # Incorporate data
@@ -14,7 +14,7 @@ print(os.getcwd())
 #importer des dataframe
 import pickle
 
-with open('C:/Users/bourh/Cours/CoursM2SISE/Machine_Learning_Python/ProjetPython/dataframe.pkl', 'rb') as file:
+with open('dataframe.pkl', 'rb') as file:
     df = pickle.load(file)
     
 with open('./dataframe2.pkl', 'rb') as file:
