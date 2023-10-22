@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.express as px
 import json
 
+import os
+print(os.getcwd())
 
 
 # Incorporate data
