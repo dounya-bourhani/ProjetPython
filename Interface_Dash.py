@@ -1,6 +1,7 @@
 from dash import Dash, html, dash_table, dcc
 from dash.dependencies import Input, Output, State
-import requests
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
 import pandas as pd
 import plotly.express as px
 import json
@@ -56,8 +57,12 @@ with open('/Users/celia/Documents/GitHub/ProjetPython/departements-version-simpl
     
 #graph = pd.DataFrame(df.groupby('Mois')['Valeur fonciere'].mean())
 
+
+
+load_figure_template("pulse")
+
 # Initialize the app
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE])
 
 # Pour le déploiement de l'app
 server = app.server
@@ -66,7 +71,9 @@ server = app.server
 ###Layout STATS
 
 tab1_layout = html.Div([
+    html.Br(),
     html.H1('Statistiques', style={'textAlign': 'center'}),
+    html.Br(),
     html.Label('Sélectionnez une année :', style= {'display': 'inline-block', 'marginRight': '20px'}),
     dcc.Dropdown(
         id='annee-dropdown',
@@ -84,10 +91,11 @@ tab1_layout = html.Div([
     html.Div(id='output-container'),
     dcc.Graph(id='histogram',style={'display': 'inline-block'}),
     dcc.Graph(id='graphique2', style={'display': 'inline-block'}),
+    dcc.Graph(id='graphique6'),
     dcc.Graph(id='graphique7'),
     dcc.Graph(id='graphique4', style= {'display': 'inline-block', 'width': '50%'}),
     dcc.Graph(id='graphique5',style= {'display': 'inline-block', 'width': '50%'}),
-    dcc.Graph(id='graphique6'),
+    
     dcc.Graph(id='graphique3'), 
     dash_table.DataTable(data=df.to_dict('records'), page_size=30)
     
@@ -96,6 +104,7 @@ tab1_layout = html.Div([
 ###LAYOUT CARTO
 
 tab2_layout = html.Div([
+    html.Br(),
     html.H1('Cartographie',  style={'textAlign': 'center'}),
     dcc.Graph(id='map', style= {'display': 'inline-block', 'width': '45%'}),
     dcc.Graph(id='map2', style= {'display': 'inline-block', 'width': '55%'}),
@@ -107,6 +116,7 @@ tab2_layout = html.Div([
 ###LAYOUT PRED
 
 tab3_layout = html.Div([
+    html.Br(),
     html.H1('Estimez votre bien :',  style={'textAlign': 'center'}),
     html.Br(),
     html.Br(),
@@ -192,7 +202,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
     fig3 = px.scatter(filtered_data, x='Commune', y="Valeur fonciere", title=f'Prix des biens dans les communes en {selected_year} pour les biens {selected_local}')
     fig4 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Nombre de Ventes par mois en {selected_year} pour les biens {selected_local}', histfunc='count')
     fig5 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Moyennes des prix de ventes par mois en {selected_year} pour les biens {selected_local}', histfunc='avg')
-    fig6 = px.scatter(filtered_data, x='Surface reelle bati', y="Valeur fonciere", title=f'Prix des biens avec leur superficie {selected_year} pour les biens {selected_local}')
+    fig6 = px.scatter(filtered_data, x='Surface reelle bati', y="Valeur fonciere", title=f'Prix des biens avec leur superficie en {selected_year} pour les biens {selected_local}')
     fig6.update_xaxes(range=[10, 600]) 
     fig7 = px.histogram(filtered_data, x="Surface reelle bati", y="Valeur fonciere", color="Type local", marginal="rug", hover_data=filtered_data.columns)
     fig7.update_xaxes(range=[10, 500]) 
