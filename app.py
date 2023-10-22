@@ -6,7 +6,7 @@ import plotly.express as px
 import json
 
 import os
-os.chdir('C:/Users/bourh/Cours/CoursM2SISE/Machine_Learning_Python/ProjetPython')
+os.chdir('C:\\Users\\bourh\\Cours\\CoursM2SISE\\Machine_Learning_Python\\ProjetPython')
 
 
 # Incorporate data
