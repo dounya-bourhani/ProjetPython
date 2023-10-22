@@ -1,34 +1,59 @@
 from dash import Dash, html, dash_table, dcc
 from dash.dependencies import Input, Output, State
-import requests
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
 import pandas as pd
 import plotly.express as px
 import json
 
-import os
-os.chdir('C:\\Users\\bourh\\Cours\\CoursM2SISE\\Machine_Learning_Python\\ProjetPython')
 
 
 # Incorporate data
 
 #importer des dataframe
-import pickle
+# with open('dataframe.pkl', 'rb') as file:
+#     df = pickle.load(file)
+    
+# with open('dataframe2.pkl', 'rb') as file:
+#     df2 = pickle.load(file)
+    
+# with open('cartoM.pkl', 'rb') as file:
+#     cartoM = pickle.load(file)
 
-with open('dataframe.pkl', 'rb') as file:
-    df = pickle.load(file)
+import pickle
+import requests
+import joblib
     
-with open('./dataframe2.pkl', 'rb') as file:
-    df2 = pickle.load(file)
-    
-with open('./cartoM.pkl', 'rb') as file:
-    cartoM = pickle.load(file)
-    
+url_dataframe = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/dataframe_sample.pkl?raw=true'
+url_dataframe2 = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/dataframe2_sample.pkl?raw=true'
+url_cartoM = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/cartoM.pkl?raw=true'
+
+response_dataframe = requests.get(url_dataframe,verify=False)
+response_dataframe2 = requests.get(url_dataframe2,verify=False)
+response_cartoM = requests.get(url_cartoM,verify=False)
+
+with open('dataframe_sample.pkl', 'wb') as f:
+    f.write(response_dataframe.content)
+with open('dataframe2_sample.pkl', 'wb') as f:
+    f.write(response_dataframe2.content)
+with open('cartoM.pkl', 'wb') as f:
+    f.write(response_cartoM.content)
+
+df = joblib.load('dataframe_sample.pkl')
+df2 = joblib.load('dataframe2_sample.pkl')
+cartoM = joblib.load('cartoM.pkl')
+
 #importer les modeles de classif et regerssion
 
-with open('./modele_classif.pkl', 'rb') as file:
-    model_class = pickle.load(file)
-    
+url_model_class = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/modele_classif.pkl'
+response_model_clas = requests.get(url_model_class,verify=False)
+with open('modele_classif.pkl', 'wb') as f:
+    f.write(response_model_clas.content)
+model_class = joblib.load('modele_classif.pkl')
 
+# with open('modele_classif.pkl', 'rb') as file:
+#     model_class = pickle.load(file)
+            
     
     
 
@@ -58,8 +83,12 @@ with open('/Users/celia/Documents/GitHub/ProjetPython/departements-version-simpl
     
 #graph = pd.DataFrame(df.groupby('Mois')['Valeur fonciere'].mean())
 
+
+
+load_figure_template("pulse")
+
 # Initialize the app
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE])
 
 # Pour le déploiement de l'app
 server = app.server
@@ -68,7 +97,9 @@ server = app.server
 ###Layout STATS
 
 tab1_layout = html.Div([
+    html.Br(),
     html.H1('Statistiques', style={'textAlign': 'center'}),
+    html.Br(),
     html.Label('Sélectionnez une année :', style= {'display': 'inline-block', 'marginRight': '20px'}),
     dcc.Dropdown(
         id='annee-dropdown',
@@ -86,10 +117,11 @@ tab1_layout = html.Div([
     html.Div(id='output-container'),
     dcc.Graph(id='histogram',style={'display': 'inline-block'}),
     dcc.Graph(id='graphique2', style={'display': 'inline-block'}),
+    dcc.Graph(id='graphique6'),
     dcc.Graph(id='graphique7'),
     dcc.Graph(id='graphique4', style= {'display': 'inline-block', 'width': '50%'}),
     dcc.Graph(id='graphique5',style= {'display': 'inline-block', 'width': '50%'}),
-    dcc.Graph(id='graphique6'),
+    
     dcc.Graph(id='graphique3'), 
     dash_table.DataTable(data=df.to_dict('records'), page_size=30)
     
@@ -98,6 +130,7 @@ tab1_layout = html.Div([
 ###LAYOUT CARTO
 
 tab2_layout = html.Div([
+    html.Br(),
     html.H1('Cartographie',  style={'textAlign': 'center'}),
     dcc.Graph(id='map', style= {'display': 'inline-block', 'width': '45%'}),
     dcc.Graph(id='map2', style= {'display': 'inline-block', 'width': '55%'}),
@@ -109,6 +142,7 @@ tab2_layout = html.Div([
 ###LAYOUT PRED
 
 tab3_layout = html.Div([
+    html.Br(),
     html.H1('Estimez votre bien :',  style={'textAlign': 'center'}),
     html.Br(),
     html.Br(),
@@ -194,7 +228,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
     fig3 = px.scatter(filtered_data, x='Commune', y="Valeur fonciere", title=f'Prix des biens dans les communes en {selected_year} pour les biens {selected_local}')
     fig4 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Nombre de Ventes par mois en {selected_year} pour les biens {selected_local}', histfunc='count')
     fig5 = px.histogram(filtered_data, x="Mois",y='Valeur fonciere', title=f'Moyennes des prix de ventes par mois en {selected_year} pour les biens {selected_local}', histfunc='avg')
-    fig6 = px.scatter(filtered_data, x='Surface reelle bati', y="Valeur fonciere", title=f'Prix des biens avec leur superficie {selected_year} pour les biens {selected_local}')
+    fig6 = px.scatter(filtered_data, x='Surface reelle bati', y="Valeur fonciere", title=f'Prix des biens avec leur superficie en {selected_year} pour les biens {selected_local}')
     fig6.update_xaxes(range=[10, 600]) 
     fig7 = px.histogram(filtered_data, x="Surface reelle bati", y="Valeur fonciere", color="Type local", marginal="rug", hover_data=filtered_data.columns)
     fig7.update_xaxes(range=[10, 500]) 
@@ -287,15 +321,20 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
             TD = 0
             TM = 0  
             
-        with open('./decision_tree_model.pkl', 'rb') as file:
-            model_reg = pickle.load(file)   
-            
                    
         reg = pd.DataFrame([[NbP, SRB, ST, NbL, moy_tc,  m2, m2R, TA, TD, TZ, TM]], columns= ['Nombre pieces principales', 'Surface reelle bati', 'Surface terrain', 'Nombre de lots', 'Moyenne Taux Chomage',
                                                                                               'prix_par_m2', 'moyenne_prix_par_m2_par_code_postal','Type local_Appartement', 'Type local_Dépendance', 'Type local_Local industriel. commercial ou assimilé', 'Type local_Maison'])
          
          ##on rappelle le pkl à chaque fois 
          
+        url_model_reg = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/decision_tree_model.pkl'
+        response_model_reg = requests.get(url_model_reg,verify=False)
+        with open('decision_tree_model.pkl', 'wb') as f:
+            f.write(response_model_reg.content)
+        model_reg = joblib.load('decision_tree_model.pkl')
+
+        # with open('decision_tree_model.pkl', 'rb') as file:
+        #     model_reg = pickle.load(file)   
         
             
                 
@@ -310,7 +349,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
         
         # Retournez les valeurs pour les afficher dans l'interface utilisateur
         texte = texte + f' Votre bien est estimé à : "{valeur}" dans le deuxième champ.'
-        file.close()
+        # file.close()
 
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig21, carte, carte2, texte
 
