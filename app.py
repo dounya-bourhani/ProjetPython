@@ -330,7 +330,7 @@ def update_output(selected_year, selected_local, n_clicks,  L, SRB, ST, NbP, NbL
          
          ##on rappelle le pkl à chaque fois 
          
-        url_model_reg = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/decision_tree_model.pkl'
+        url_model_reg = 'https://github.com/dounya-bourhani/ProjetPython/blob/main/decision_tree_model.pkl?raw=true'
         response_model_reg = requests.get(url_model_reg,verify=False)
         with open('decision_tree_model.pkl', 'wb') as f:
             f.write(response_model_reg.content)
