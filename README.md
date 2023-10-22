@@ -20,16 +20,15 @@ donnees/dictionnaire de données.pdf
 
 De plus nous avons récuperer des données sur le taux de chômage (sl_etc_2023T2.xls) que nous avons ajouter au dataframe permettant de meilleures performances des modèles.
 
-## B - Installation
+## B - Utilisation
 
-Pour exécuter ce projet, vous devez avoir Python installé sur votre système. De plus, vous devez installer les packages Python nécessaires. Vous pouvez installer les packages nécessaires à l'aide de la commande suivante :  
-pip install pandas matplotlib seaborn scikit-learn pickle numpy
+lien de l'app: https://estimation-vente-immobiliere.onrender.com/
 
-## B - Installation
+## C - Documentation
 
-lien de l'app:
-
-## C - Utilisation
+lire:  
+- Documentation_fonctionelle.pdf
+- Documentation_technique.pdf
 
 ## D - Contributions
 
